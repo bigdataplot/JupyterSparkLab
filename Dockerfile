@@ -5,7 +5,13 @@
 ## Build Base
 FROM ubuntu:16.04
 
-RUN apt-get install -y sudo wget software-properties-common
+
+## Base Update
+RUN umask 022
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y sudo wget software-properties-common
+
 
 ## Tag
 MAINTAINER Yongjian(Ken) Ouyang <yongjian.ouyang@outlook.com>
@@ -41,12 +47,6 @@ WORKDIR /apps/jupyterhub
 
 ## Environment Set1
 ENV DEBIAN_FRONTEND noninteractive
-
-
-## Base Update
-RUN umask 022
-RUN apt-get update && \
-    apt-get upgrade -y
 
 
 ## Get Python 3.5
