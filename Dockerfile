@@ -27,7 +27,7 @@ RUN addgroup docker && \
 RUN adduser bigdataplot --gecos "BigDataPlot LLC,r001,w001,h001" --disabled-password && \
     echo "bigdataplot:bigpass" | chpasswd && \
     echo 'bigdataplot ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers && \
-    su bigdataplot -c 'ln -s /apps/datahub/ /home/bigdataplot/' && \
+    su bigdataplot -c 'ln -s /apps/datahub /home/bigdataplot/datahub' && \
     usermod -a -G docker bigdataplot
 
 
