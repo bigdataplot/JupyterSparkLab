@@ -28,6 +28,7 @@ sudo docker run --name data-lab \
     --volume /apps/datahub:/apps/datahub \
     bigdataplot/jupyter-spark-lab
 ```
+Log on to Jupyterhub host (default: localhost:8888) with: __bigdataplot / bigpass__
 
 - ### Stop/Remove Container
 ```shell
