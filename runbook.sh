@@ -1,81 +1,143 @@
-
 ## ======================================== ##
-##                 Host
+##  User Setup / User Profile Backup (Host)
 ## ======================================== ##
 sudo su
 
 ## Setup Admin Account
-export NUSER='bigdataplot'
 export DGNM='docker'
-export NUID='2046'
-export NGID='2047'
 export DGID='2048'
 
 ## Setup Docker Group
-delgroup $DGNM
-addgroup $DGNM
+groupdel $DGNM || true
+groupadd $DGNM
 groupmod -g $DGID $DGNM
 newgrp $DGNM
+exit
 
-## Setup  Admin Permission (bigdataplot)
-adduser $NUSER --gecos "BigDataPlot LLC,r001,w001,h001" --disabled-password
+## !!------------------------------------- ##
+## If you want to use your local profiles, no need to run the following
+## Run this part only if necessary (to create admin account)
+## Setup  Admin Permission (dockeradm)
+export NUSER='dockeradm'
+export NUID='2046'
+userdel -r $NUSER || true
+adduser $NUSER --gecos "Docker Admin,,," --disabled-password --uid $NUID
+groupmod -g $NUID $NUSER
 echo "$NUSER:bigpass" | chpasswd
-usermod -u $NUID $NUSER
-groupmod -g $NGID $NUSER
-echo '$NUSER ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
-su $NUSER -c 'ln -s /apps/datahub /home/$NUSER/datahub'
+echo "$NUSER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+#adduser $NUSER sudo
+su $NUSER -c "ln -s /apps/datahub /home/$NUSER/datahub"
 usermod -a -G $DGNM $NUSER
 
+rm /home/$NUSER/datahub || true
+su $NUSER -c "ln -s /apps/datahub /home/$NUSER/datahub"
+
+## --------------------------------------!! ##
 ## Setup Host Directory
 mkdir -p /apps/datahub
-chmod -R 770 /apps/datahub
-chown -R root:$DGNM /apps/datahub
+chmod 770 /apps/datahub
+chown root:$DGNM /apps/datahub
+
 
 ## Backup User Profile Backups
-chmod 500 host_profile_bk.sh
-./host_profile_bk.sh
+rm -rf /apps/prfsync/ || true
+mkdir -p /apps/prfsync/
+
+## Setup UID filter limit (Ubuntu from 1000/CentOS from 500):
+export UGIDLIMIT=1000
+
+## Now copy /etc/passwd accounts to /apps/prfsync/passwd.mig using awk to filter out system account (i.e. only copy user accounts)
+awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/passwd > /apps/prfsync/passwd.mig
+
+## Copy /etc/group file:
+awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/group > /apps/prfsync/group.mig
+
+## Copy /etc/shadow file:
+awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534) {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /apps/prfsync/shadow.mig
+
+## Copy /etc/gshadow (rarely used):
+cp /etc/gshadow /apps/prfsync/gshadow.mig
+
+## Fix permission
+chmod -R 640 /apps/prfsync
+chown -R root:$DGNM /apps/prfsync
+
+exit
+
+## Move to current work directory
+#sudo sh -c 'cp /apps/prfsync/*.mig ./'
 
 
 ## ======================================== ##
-##             Docker Container
+##             Docker Build (Host)
 ## ======================================== ##
+sudo docker build -t bigdataplot/jupyter-spark-lab:s2.01 .
+
+sudo docker login --username bigdataplot
+sudo docker push bigdataplot/jupyter-spark-lab:s2.01
+
+# Or just run if build exists
+sudo docker run --name data-lab \
+    --detach \
+    --restart always\
+    --publish 8888:8888 \
+    --volume /apps/datahub:/apps/datahub \
+    --volume /apps/prfsync:/apps/prfsync \
+    --volume /home:/home \
+    bigdataplot/jupyter-spark-lab:s2.01
+
+
+## ======================================== ##
+##  Update User Profile (Docker Container)
+## ======================================== ##
+sudo docker exec -it data-lab bash
+
+export UGIDLIMIT=1000
+awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT' /etc/passwd > /apps/prfsync/passwd0.mig
+awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT' /etc/group > /apps/prfsync/group0.mig
+awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /apps/prfsync/shadow0.mig
+
 
 rm /etc/passwd
-cat /apps/datahub/prfmve/passwd.mig >> /etc/passwd
+cat /apps/prfsync/passwd0.mig >> /etc/passwd
+cat /apps/prfsync/passwd.mig >> /etc/passwd
 
 rm /etc/group
-cat /apps/datahub/prfmve/group.mig >> /etc/group
+cat /apps/prfsync/group0.mig >> /etc/group
+cat /apps/prfsync/group.mig >> /etc/group
 
 rm /etc/shadow
-cat /apps/datahub/prfmve/shadow.mig >> /etc/shadow
+cat /apps/prfsync/shadow0.mig >> /etc/shadow
+cat /apps/prfsync/shadow.mig >> /etc/shadow
 
 rm /etc/gshadow
-cat /apps/datahub/prfmve/gshadow.mig >> /etc/gshadow
+cat /apps/prfsync/gshadow.mig >> /etc/gshadow
+
+exit
+
+# Then return
+sudo docker exec -it data-lab bash
 
 
 ## ======================================== ##
-##              Operation
+##           Docker Operation (Host)
 ## ======================================== ##
-
-## Stop/Reprfmve Container
+## Stop/Reprfsync Container
 sudo docker stop data-lab
 sudo docker rm data-lab
 
-## Reprfmve Image
-sudo docker rmi bigdataplot/jupyter-spark-lab:1.31
+## Reprfsync Image
+sudo docker rmi bigdataplot/jupyter-spark-lab:s2.01
 
 ## Build from Dockerfile
-sudo docker build -t bigdataplot/jupyter-spark-lab:1.33 .
+sudo docker build -t bigdataplot/jupyter-spark-lab:s2.01 .
 
 ## Check Docker Logs
 sudo docker logs data-lab
 
 ## Login and Push a Image
 sudo docker login --username bigdataplot
-sudo docker push bigdataplot/jupyter-spark-lab:1.33
-
-
-
+sudo docker push bigdataplot/jupyter-spark-lab:s2.01
 
 ## Bring up the Jupyter-Spark-Lab (Modify ports if necessary)
 sudo docker run --name data-lab \
@@ -83,4 +145,5 @@ sudo docker run --name data-lab \
     --restart always\
     --publish 8888:8888 \
     --volume /apps/datahub:/apps/datahub \
-    bigdataplot/jupyter-spark-lab
+    --volume /home:/home \
+    dockeradm/jupyter-spark-lab:s2.01

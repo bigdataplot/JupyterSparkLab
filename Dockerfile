@@ -1,4 +1,4 @@
-#  Copyright (c) BigDataPlot LLC
+#  Copyright (c) bigdataplot LLC
 #  Distributed Under GNU GENERAL PUBLIC LICENSE
 
 ## ========== Begin-Of-Dockerfile ==========
@@ -15,25 +15,12 @@ RUN apt-get update && \
 
 ## Tag
 MAINTAINER Yongjian(Ken) Ouyang <yongjian.ouyang@outlook.com>
-## Sync Host User Profile
-RUN rm /etc/passwd  && \
-    cat /apps/datahub/prfmve/passwd.mig >> /etc/passwd  && \
-    rm /etc/group && \
-    cat /apps/datahub/prfmve/group.mig >> /etc/group && \
-    rm /etc/shadow && \
-    cat /apps/datahub/prfmve/shadow.mig >> /etc/shadow && \
-    rm /etc/gshadow && \
-    cat /apps/datahub/prfmve/gshadow.mig >> /etc/gshadow && \
 
 
 ## Setup Working and Volumne Directories
 RUN mkdir -p /apps/jupyterhub/log && \
-    chmod -R 775 /apps/jupyterhub && \
-    chown -R root:docker /apps/jupyterhub
-
-RUN mkdir -p /apps/datahub && \
-    chmod -R 770 /apps/datahub && \
-    chown -R root:docker /apps/datahub
+    chmod -R 744 /apps/jupyterhub && \
+    chown -R root:root /apps/jupyterhub
 
 
 ## Change Working Directory
@@ -75,7 +62,7 @@ RUN add-apt-repository ppa:webupd8team/java -y && \
 
 
 ## Additional Python Packages
-COPY requirements.txt requirements.txt
+COPY requirements.txt  requirements.txt
 RUN python3 -m pip install -r requirements.txt
 
 
