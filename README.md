@@ -5,7 +5,7 @@ Jupyterhub             |  Plot
 :-------------------------:|:-------------------------:
 ![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/top.png)  |  ![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/matplotlib.png)
 GitHub             |  DockerHub
-![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/github.png)  |  ![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/dockerhub.png)
+![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/github.PNG)  |  ![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/dockerhub.PNG)
 
 
 ### To bring up your Jupyter-Spark-Lab environment, do the following steps:
