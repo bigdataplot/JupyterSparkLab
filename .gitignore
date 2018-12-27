@@ -1,0 +1,8 @@
+log
+control
+data/
+archives
+RealAnalysisConfig.xml
+.ipynb_checkpoints/
+__pycache__/
+notes/

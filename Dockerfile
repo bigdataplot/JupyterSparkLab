@@ -12,24 +12,25 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y sudo wget software-properties-common
 
-
 ## Tag
 MAINTAINER Yongjian(Ken) Ouyang <yongjian.ouyang@outlook.com>
-ARG NB_USER="bigdataplot"
-ARG NB_UID="1000"
-ARG NB_GID="100"
-
+ARG NUSER="bigdataplot"
+ARG NUID="2046"
+ARG NGID="2047"
+ARG DGID="2048"
 
 ## Docker Group + User/Group Permission (bigdataplot)
 RUN addgroup docker && \
+    groupmod -g $DGID docker && \
     newgrp docker
 
 RUN adduser bigdataplot --gecos "BigDataPlot LLC,r001,w001,h001" --disabled-password && \
     echo "bigdataplot:bigpass" | chpasswd && \
+    usermod -u $NUID bigdataplot && \
+    groupmod -g $NGID bigdataplot && \
     echo 'bigdataplot ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers && \
     su bigdataplot -c 'ln -s /apps/datahub /home/bigdataplot/datahub' && \
     usermod -a -G docker bigdataplot
-
 
 ## Setup Working and Volumne Directories
 RUN mkdir -p /apps/jupyterhub/log && \
@@ -95,7 +96,7 @@ ENV DEBIAN_FRONTEND teletype
 
 
 ## Run Jupyterhub
-USER $NB_USER
+USER $NUSER
 CMD sudo jupyterhub -f /apps/jupyterhub/jupyterhub_config.py
 
 ## ========== End-Of-Dockerfile ==========
