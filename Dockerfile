@@ -48,17 +48,14 @@ RUN apt-get install -y npm nodejs && \
 
 RUN python3 -m pip install --upgrade jupyterhub notebook jupyterlab
 
-RUN jupyterhub --generate-config && \
-    sed -i "s|#c.Spawner.default_url = ''|c.Spawner.default_url = '/lab'|g" jupyterhub_config.py && \
-    sed -i "s|#c.JupyterHub.bind_url = 'http://:8000'|c.JupyterHub.bind_url = 'http://0.0.0.0:8888'|g" jupyterhub_config.py
-
 
 ## Spark Installation
-RUN add-apt-repository ppa:webupd8team/java -y && \
-    apt-get update && \
-    echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
-    apt-get install -y oracle-java8-installer && \
+RUN apt-get install --no-install-recommends -y openjdk-8-jre-headless ca-certificates-java && \
     python3 -m pip install --upgrade pyspark
+
+
+## Additional Linux Packages
+RUN apt-get install -y git
 
 
 ## Additional Python Packages
@@ -77,6 +74,10 @@ ENV DEBIAN_FRONTEND teletype
 
 
 ## Run Jupyterhub
+RUN jupyterhub --generate-config && \
+    sed -i "s|#c.Spawner.default_url = ''|c.Spawner.default_url = '/lab'|g" jupyterhub_config.py && \
+    sed -i "s|#c.JupyterHub.bind_url = 'http://:8000'|c.JupyterHub.bind_url = 'http://0.0.0.0:8888'|g" jupyterhub_config.py
+
 CMD jupyterhub -f /apps/jupyterhub/jupyterhub_config.py
 
 ## ========== End-Of-Dockerfile ==========

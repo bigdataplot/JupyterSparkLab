@@ -2,3 +2,8 @@ numpy
 pandas
 tensorflow
 matplotlib
+#oauthenticator
+pymongo
+#pyarrow
+#cx_Oracle
+#pyhive[hive]

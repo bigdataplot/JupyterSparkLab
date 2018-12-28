@@ -7,6 +7,8 @@ sudo su
 export DGNM='docker'
 export DGID='2048'
 
+
+## Only if no exist or different uid/gid
 ## Setup Docker Group
 groupdel $DGNM || true
 groupadd $DGNM
@@ -48,11 +50,7 @@ export UGIDLIMIT=1000
 
 ## Now copy /etc/passwd accounts to /apps/prfsync/passwd.mig using awk to filter out system account (i.e. only copy user accounts)
 awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/passwd > /apps/prfsync/passwd.mig
-
-## Copy /etc/group file:
 awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/group > /apps/prfsync/group.mig
-
-## Copy /etc/shadow file:
 awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534) {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /apps/prfsync/shadow.mig
 
 ## Copy /etc/gshadow (rarely used):
@@ -71,10 +69,10 @@ exit
 ## ======================================== ##
 ##             Docker Build (Host)
 ## ======================================== ##
-sudo docker build -t bigdataplot/jupyter-spark-lab:s2.01 .
+sudo docker build -t bigdataplot/jupyter-spark-lab:s2.10 .
 
 sudo docker login --username bigdataplot
-sudo docker push bigdataplot/jupyter-spark-lab:s2.01
+sudo docker push bigdataplot/jupyter-spark-lab:s2.10
 
 # Or just run if build exists
 sudo docker run --name data-lab \
@@ -84,7 +82,7 @@ sudo docker run --name data-lab \
     --volume /apps/datahub:/apps/datahub \
     --volume /apps/prfsync:/apps/prfsync \
     --volume /home:/home \
-    bigdataplot/jupyter-spark-lab:s2.01
+    bigdataplot/jupyter-spark-lab:s2.10
 
 
 ## ======================================== ##
@@ -127,17 +125,17 @@ sudo docker stop data-lab
 sudo docker rm data-lab
 
 ## Reprfsync Image
-sudo docker rmi bigdataplot/jupyter-spark-lab:s2.01
+sudo docker rmi bigdataplot/jupyter-spark-lab:s2.10
 
 ## Build from Dockerfile
-sudo docker build -t bigdataplot/jupyter-spark-lab:s2.01 .
+sudo docker build -t bigdataplot/jupyter-spark-lab:s2.10 .
 
 ## Check Docker Logs
 sudo docker logs data-lab
 
 ## Login and Push a Image
 sudo docker login --username bigdataplot
-sudo docker push bigdataplot/jupyter-spark-lab:s2.01
+sudo docker push bigdataplot/jupyter-spark-lab:s2.10
 
 ## Bring up the Jupyter-Spark-Lab (Modify ports if necessary)
 sudo docker run --name data-lab \
@@ -146,4 +144,4 @@ sudo docker run --name data-lab \
     --publish 8888:8888 \
     --volume /apps/datahub:/apps/datahub \
     --volume /home:/home \
-    dockeradm/jupyter-spark-lab:s2.01
+    dockeradm/jupyter-spark-lab:s2.10
