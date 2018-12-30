@@ -69,10 +69,10 @@ exit
 ## ======================================== ##
 ##             Docker Build (Host)
 ## ======================================== ##
-sudo docker build -t bigdataplot/jupyter-spark-lab:s2.10 .
+sudo docker build -t bigdataplot/jupyter-spark-lab:s2.11 .
 
 sudo docker login --username bigdataplot
-sudo docker push bigdataplot/jupyter-spark-lab:s2.10
+sudo docker push bigdataplot/jupyter-spark-lab:s2.11
 
 # Or just run if build exists
 sudo docker run --name data-lab \
@@ -82,7 +82,7 @@ sudo docker run --name data-lab \
     --volume /apps/datahub:/apps/datahub \
     --volume /apps/prfsync:/apps/prfsync \
     --volume /home:/home \
-    bigdataplot/jupyter-spark-lab:s2.10
+    bigdataplot/jupyter-spark-lab:s2.11
 
 
 ## ======================================== ##
@@ -125,17 +125,17 @@ sudo docker stop data-lab
 sudo docker rm data-lab
 
 ## Reprfsync Image
-sudo docker rmi bigdataplot/jupyter-spark-lab:s2.10
+sudo docker rmi bigdataplot/jupyter-spark-lab:s2.11
 
 ## Build from Dockerfile
-sudo docker build -t bigdataplot/jupyter-spark-lab:s2.10 .
+sudo docker build -t bigdataplot/jupyter-spark-lab:s2.11 .
 
 ## Check Docker Logs
 sudo docker logs data-lab
 
 ## Login and Push a Image
 sudo docker login --username bigdataplot
-sudo docker push bigdataplot/jupyter-spark-lab:s2.10
+sudo docker push bigdataplot/jupyter-spark-lab:s2.11
 
 ## Bring up the Jupyter-Spark-Lab (Modify ports if necessary)
 sudo docker run --name data-lab \
@@ -144,4 +144,4 @@ sudo docker run --name data-lab \
     --publish 8888:8888 \
     --volume /apps/datahub:/apps/datahub \
     --volume /home:/home \
-    dockeradm/jupyter-spark-lab:s2.10
+    dockeradm/jupyter-spark-lab:s2.11

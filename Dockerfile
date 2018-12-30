@@ -74,6 +74,8 @@ ENV DEBIAN_FRONTEND teletype
 
 
 ## Run Jupyterhub
+ENV PYSPARK_PYTHON=/usr/bin/python3
+
 RUN jupyterhub --generate-config && \
     sed -i "s|#c.Spawner.default_url = ''|c.Spawner.default_url = '/lab'|g" jupyterhub_config.py && \
     sed -i "s|#c.JupyterHub.bind_url = 'http://:8000'|c.JupyterHub.bind_url = 'http://0.0.0.0:8888'|g" jupyterhub_config.py
