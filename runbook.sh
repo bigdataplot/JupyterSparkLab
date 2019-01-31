@@ -79,9 +79,12 @@ sudo docker run --name data-lab \
     --detach \
     --restart always\
     --publish 8888:8888 \
+    --publish 8889:4040 \
     --volume /apps/datahub:/apps/datahub \
     --volume /apps/prfsync:/apps/prfsync \
     --volume /home:/home \
+    --volume /tmp:/tmp \
+    --volume /etc/localtime:/etc/localtime:ro \
     bigdataplot/jupyter-spark-lab:s2.11
 
 
@@ -146,4 +149,5 @@ sudo docker run --name data-lab \
     --volume /apps/datahub:/apps/datahub \
     --volume /home:/home \
     --volume /tmp:/tmp \
+    --volume /etc/localtime:/etc/localtime:ro \
     dockeradm/jupyter-spark-lab:s2.11
