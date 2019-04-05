@@ -42,23 +42,25 @@ chown root:$DGNM /apps/datahub
 
 
 ## Backup User Profile Backups
-rm -rf /apps/prfsync/ || true
-mkdir -p /apps/prfsync/
+rm -rf /tmp/prfsync/ || true
+mkdir -p /tmp/prfsync/
 
 ## Setup UID filter limit (Ubuntu from 1000/CentOS from 500):
 export UGIDLIMIT=1000
 
-## Now copy /etc/passwd accounts to /apps/prfsync/passwd.mig using awk to filter out system account (i.e. only copy user accounts)
-awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/passwd > /apps/prfsync/passwd.mig
-awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/group > /apps/prfsync/group.mig
-awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534) {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /apps/prfsync/shadow.mig
+## Now copy /etc/passwd accounts to /tmp/prfsync/passwd.mig using awk to filter out system account (i.e. only copy user accounts)
+awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/passwd > /tmp/prfsync/passwd.mig
+awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534)' /etc/group > /tmp/prfsync/group.mig
+awk -v LIMIT=$UGIDLIMIT -F: '($3>=LIMIT) && ($3!=65534) {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /tmp/prfsync/shadow.mig
 
 ## Copy /etc/gshadow (rarely used):
-cp /etc/gshadow /apps/prfsync/gshadow.mig
+cp /etc/gshadow /tmp/prfsync/gshadow.mig
 
 ## Fix permission
-chmod -R 640 /apps/prfsync
-chown -R root:$DGNM /apps/prfsync
+chmod -R 640 /tmp/prfsync
+chown -R root:root /tmp/prfsync
+
+ls -al /tmp/prfsync
 
 exit
 
@@ -75,50 +77,58 @@ sudo docker login --username bigdataplot
 sudo docker push bigdataplot/jupyter-spark-lab:s2.11
 
 # Or just run if build exists
-sudo docker run --name data-lab \
-    --detach \
+sudo docker run -itd\
+    --name jupyterhub-gz \
+    --hostname jupyterhub-gz \
     --restart always\
-    --publish 8888:8888 \
-    --publish 8889:4040 \
+    --publish 8988:8000 \
+    --publish 8989:4040 \
     --volume /apps/datahub:/apps/datahub \
-    --volume /apps/prfsync:/apps/prfsync \
     --volume /home:/home \
     --volume /tmp:/tmp \
     --volume /etc/localtime:/etc/localtime:ro \
-    bigdataplot/jupyter-spark-lab:s2.11
+    bigdataplot/jupyter-spark-lab:s2.11 bash
 
 
 ## ======================================== ##
 ##  Update User Profile (Docker Container)
 ## ======================================== ##
-sudo docker exec -it data-lab bash
+sudo docker exec -it jupyterhub-gz bash
 
 export UGIDLIMIT=1000
-awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT' /etc/passwd > /apps/prfsync/passwd0.mig
-awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT' /etc/group > /apps/prfsync/group0.mig
-awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /apps/prfsync/shadow0.mig
+awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT' /etc/passwd > /tmp/prfsync/passwd0.mig
+awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT' /etc/group > /tmp/prfsync/group0.mig
+awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT {print $1}' /etc/passwd | tee - |egrep -f - /etc/shadow > /tmp/prfsync/shadow0.mig
 
 
 rm /etc/passwd
-cat /apps/prfsync/passwd0.mig >> /etc/passwd
-cat /apps/prfsync/passwd.mig >> /etc/passwd
+cat /tmp/prfsync/passwd0.mig >> /etc/passwd
+cat /tmp/prfsync/passwd.mig >> /etc/passwd
 
 rm /etc/group
-cat /apps/prfsync/group0.mig >> /etc/group
-cat /apps/prfsync/group.mig >> /etc/group
+cat /tmp/prfsync/group0.mig >> /etc/group
+cat /tmp/prfsync/group.mig >> /etc/group
 
 rm /etc/shadow
-cat /apps/prfsync/shadow0.mig >> /etc/shadow
-cat /apps/prfsync/shadow.mig >> /etc/shadow
+cat /tmp/prfsync/shadow0.mig >> /etc/shadow
+cat /tmp/prfsync/shadow.mig >> /etc/shadow
 
 rm /etc/gshadow
-cat /apps/prfsync/gshadow.mig >> /etc/gshadow
+cat /tmp/prfsync/gshadow.mig >> /etc/gshadow
 
 exit
 
 # Then return
-sudo docker exec -it data-lab bash
+sudo docker exec -it jupyterhub-gz bash
 
+
+## ======================================== ##
+##         Modify Jupyterhub Config
+## ======================================== ##
+Modify ip and subdirectory
+
+exit
+sudo docker exec -itd jupyterhub-gz jupyterhub -f /apps/jupyterhub/jupyterhub_config.py
 
 ## ======================================== ##
 ##           Docker Operation (Host)
