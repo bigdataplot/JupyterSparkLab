@@ -71,29 +71,29 @@ exit
 ## ======================================== ##
 ##             Docker Build (Host)
 ## ======================================== ##
-sudo docker build -t bigdataplot/jupyter-spark-lab:s2.11 .
+sudo docker build -t bigdataplot/jupyter-spark-lab:s2.12 .
 
 sudo docker login --username bigdataplot
-sudo docker push bigdataplot/jupyter-spark-lab:s2.11
+sudo docker push bigdataplot/jupyter-spark-lab:s2.12
 
 # Or just run if build exists
 sudo docker run -itd\
-    --name jupyterhub-gz \
-    --hostname jupyterhub-gz \
+    --name jupyterhub \
+    --hostname jupyterhub \
     --restart always\
-    --publish 8988:8000 \
-    --publish 8989:4040 \
+    --publish 8888:8000 \
+    --publish 8889:4040 \
     --volume /apps/datahub:/apps/datahub \
     --volume /home:/home \
     --volume /tmp:/tmp \
     --volume /etc/localtime:/etc/localtime:ro \
-    bigdataplot/jupyter-spark-lab:s2.11 bash
+    bigdataplot/jupyter-spark-lab:s2.12 bash
 
 
 ## ======================================== ##
 ##  Update User Profile (Docker Container)
 ## ======================================== ##
-sudo docker exec -it jupyterhub-gz bash
+sudo docker exec -it jupyterhub bash
 
 export UGIDLIMIT=1000
 awk -v LIMIT=$UGIDLIMIT -F: '$3<LIMIT' /etc/passwd > /tmp/prfsync/passwd0.mig
@@ -119,7 +119,7 @@ cat /tmp/prfsync/gshadow.mig >> /etc/gshadow
 exit
 
 # Then return
-sudo docker exec -it jupyterhub-gz bash
+sudo docker exec -it jupyterhub bash
 
 
 ## ======================================== ##
@@ -127,8 +127,10 @@ sudo docker exec -it jupyterhub-gz bash
 ## ======================================== ##
 Modify ip and subdirectory
 
+c.JupyterHub.bind_url = 'http://:8000/jupyterhub'
+
 exit
-sudo docker exec -itd jupyterhub-gz jupyterhub -f /apps/jupyterhub/jupyterhub_config.py
+sudo docker exec -itd jupyterhub jupyterhub -f /apps/jupyterhub/jupyterhub_config.py
 
 ## ======================================== ##
 ##           Docker Operation (Host)
@@ -138,26 +140,27 @@ sudo docker stop data-lab
 sudo docker rm data-lab
 
 ## Reprfsync Image
-sudo docker rmi bigdataplot/jupyter-spark-lab:s2.11
+sudo docker rmi bigdataplot/jupyter-spark-lab:s2.12
 
 ## Build from Dockerfile
-sudo docker build -t bigdataplot/jupyter-spark-lab:s2.11 .
+sudo docker build -t bigdataplot/jupyter-spark-lab:s2.12 .
 
 ## Check Docker Logs
 sudo docker logs data-lab
 
 ## Login and Push a Image
 sudo docker login --username bigdataplot
-sudo docker push bigdataplot/jupyter-spark-lab:s2.11
+sudo docker push bigdataplot/jupyter-spark-lab:s2.12
 
 ## Bring up the Jupyter-Spark-Lab (Modify ports if necessary)
-sudo docker run --name data-lab \
-    --detach \
+sudo docker run -itd\
+    --name jupyterhub \
+    --hostname jupyterhub \
     --restart always\
-    --publish 8888:8888 \
+    --publish 8888:8000 \
     --publish 8889:4040 \
     --volume /apps/datahub:/apps/datahub \
     --volume /home:/home \
     --volume /tmp:/tmp \
     --volume /etc/localtime:/etc/localtime:ro \
-    dockeradm/jupyter-spark-lab:s2.11
+    bigdataplot/jupyter-spark-lab:s2.12 bash
