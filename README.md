@@ -7,7 +7,6 @@ Jupyterhub             |  Plot
 GitHub             |  DockerHub
 ![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/github.PNG)  |  ![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/dockerhub.PNG)
 
-
 ### Versions
 Version "**s**x.xx" uses host's local user profiles. (Check branch **ProfSync** on GitHub for more details)
 
@@ -34,6 +33,7 @@ sudo docker run --name data-lab \
     --volume /apps/datahub:/apps/datahub \
     bigdataplot/jupyter-spark-lab
 ```
+Log on to Jupyterhub host (default: localhost:8888) with: __bigdataplot / bigpass__
 
 - ### Stop/Remove Container
 ```shell
