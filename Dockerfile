@@ -3,83 +3,77 @@
 
 ## ========== Begin-Of-Dockerfile ==========
 ## Build Base
-FROM ubuntu:16.04
-
+FROM ubuntu:20.04
 
 ## Base Update
 RUN umask 022
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y sudo wget software-properties-common
+RUN apt-get update -y
+RUN apt-get upgrade -y
 
+## Package preinstall
+RUN apt install -y curl build-essential libpq-dev libssl-dev libffi-dev zlib1g-dev
 
 ## Tag
 MAINTAINER Yongjian(Ken) Ouyang <yongjian.ouyang@outlook.com>
 
-
 ## Setup Working and Volumne Directories
-RUN mkdir -p /apps/jupyterhub/log && \
-    chmod -R 744 /apps/jupyterhub && \
-    chown -R root:root /apps/jupyterhub
-
+RUN mkdir -p /dockerlocal/jupyterhub/log
+RUN chmod -R 744 /dockerlocal/jupyterhub
+RUN chown -R root:root /dockerlocal/jupyterhub
 
 ## Change Working Directory
-WORKDIR /apps/jupyterhub
-
+WORKDIR /dockerlocal/jupyterhub
 
 ## Environment Set1
 ENV DEBIAN_FRONTEND noninteractive
 
+## Install miniconda to
+RUN curl -LO https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+RUN bash Miniconda3-latest-Linux-x86_64.sh -p /miniconda -b
+RUN rm Miniconda3-latest-Linux-x86_64.sh
+#RUN echo "export PATH=/miniconda/bin:${PATH}" >> /root/.bashrc
+ENV PATH "/miniconda/bin:${PATH}"
+RUN conda update -y conda
 
-## Get Python 3.5
-RUN apt-get install -y build-essential libpq-dev libssl-dev openssl libffi-dev zlib1g-dev && \
-    apt-get install -y python3-pip python3-dev  && \
-    python3 -m pip install --upgrade pip
-
+# Install python3 and packages from conda
+COPY requirements.txt  requirements.txt
+RUN conda install -y --file requirements.txt
+RUN conda install -y tensorflow numpy scipy pandas matplotlib seaborn lightgbm
+RUN conda install -y -c huggingface transformers
+RUN conda install -y -c plotly plotly
+RUN conda install -y -c intel scikit-learn
+RUN conda install -y -c anaconda cython pyhive cx_oracle
+RUN conda install -y -c conda-forge pytorch catboost shap sentence-transformers spacy pyreadstat
+RUN python -m pip install ipinfo pytorch-tabnet
 
 ## Jupyterhub
-RUN apt-get install -y npm nodejs && \
-    npm cache clean -f && \
-    npm init -y && \
-    npm install -g n && \
-    n stable && \
-    ln -sf /usr/local/n/versions/node/11.0.0/bin/node /usr/bin/node && \
-    npm install -g configurable-http-proxy
+RUN apt install -y nodejs npm
+RUN npm install -g configurable-http-proxy
+RUN conda install -y wheel jupyterhub jupyterlab ipywidgets
 
-RUN python3 -m pip install --upgrade jupyterhub notebook jupyterlab
-
-
-## Spark Installation
-RUN apt-get install --no-install-recommends -y openjdk-8-jre-headless ca-certificates-java && \
-    python3 -m pip install --upgrade pyspark
-
+## Install Spark
+RUN mkdir -p /usr/share/man/man1
+RUN apt install --no-install-recommends -y openjdk-11-jre-headless ca-certificates-java
+RUN conda install -c conda-forge -y pyspark
 
 ## Additional Linux Packages
-RUN apt-get install -y git
+RUN apt install -y libsasl2-dev libsasl2-modules-gssapi-mit
+RUN apt install -y git nano supervisor rsync unzip
+RUN apt install -y krb5-user
 
+## Kerberos Config
+COPY krb5.conf  krb5.conf
+RUN mv krb5.conf /etc/krb5.conf
 
-## Additional Python Packages
-COPY requirements.txt  requirements.txt
-RUN python3 -m pip install -r requirements.txt
-
+## Run Jupyterhub
+RUN conda install -c conda-forge -y oauthenticator
+RUN jupyterhub --generate-config
+RUN sed -i "s|# c.Spawner.default_url = ''|c.Spawner.default_url = '/lab'|g" jupyterhub_config.py
 
 ## Cleaning
-RUN apt-get remove -y wget software-properties-common && \
-    apt-get autoremove -y && \
-    apt-get clean -y
-
+RUN apt --purge autoremove -y
+RUN apt clean -y
 
 ## Environment Set2
 ENV DEBIAN_FRONTEND teletype
-
-
-## Run Jupyterhub
-ENV PYSPARK_PYTHON=/usr/bin/python3
-
-RUN jupyterhub --generate-config && \
-    sed -i "s|#c.Spawner.default_url = ''|c.Spawner.default_url = '/lab'|g" jupyterhub_config.py && \
-    sed -i "s|#c.JupyterHub.bind_url = 'http://:8000'|c.JupyterHub.bind_url = 'http://:8000/jupyterhub'|g" jupyterhub_config.py
-
-CMD jupyterhub -f /apps/jupyterhub/jupyterhub_config.py
-
 ## ========== End-Of-Dockerfile ==========

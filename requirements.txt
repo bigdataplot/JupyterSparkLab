@@ -1,7 +1,10 @@
+tensorflow
+scipy
 numpy
 pandas
-tensorflow
 matplotlib
+seaborn
+lightgbm
 #oauthenticator
 pymongo
 #pyarrow

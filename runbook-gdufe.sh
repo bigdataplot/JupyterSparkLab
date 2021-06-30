@@ -1,13 +1,30 @@
 BOX:    bdp-gdufe29
 IP:     172.28.2.29
 
+## ======================================================== ##
+##            Install Docker CE (Community Edition)
+## ======================================================== ##
+sudo apt remove docker docker-engine docker.io containerd runc
+sudo apt update
+sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release
 
-## ----->> Build container
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+
+
+## ======================================================== ##
+##                     Build Container
+## ======================================================== ##
 sudo docker build -t jupyter-spark-lab:v3.01 .
 
-## ======================================================== ##
-##                      verint-dpo
-## ======================================================== ##
+
 sudo docker stop verint-dpo
 sudo docker rm verint-dpo
 
@@ -36,6 +53,28 @@ sudo docker run -itd \
 #--env GITLAB_HOST=http://10.140.160.15/gitlab \
 
 sudo docker exec -it verint-dpo bash
+
+
+## ======================================================== ##
+##              Manual Debug (If build failed)
+## ======================================================== ##
+sudo docker run -itd \
+    --name temp_test \
+    ubuntu:18.04
+
+sudo docker start temp_test
+sudo docker exec -it temp_test bash
+
+
+
+
+
+
+
+
+
+
+
 
 ## ----->> Fix pyspark localhost
 #echo "127.0.0.1 $(hostname)" >> /etc/hosts
