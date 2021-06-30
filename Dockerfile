@@ -59,11 +59,11 @@ RUN conda install -c conda-forge -y pyspark
 ## Additional Linux Packages
 RUN apt install -y libsasl2-dev libsasl2-modules-gssapi-mit
 RUN apt install -y git nano supervisor rsync unzip
-RUN apt install -y krb5-user
+#RUN apt install -y krb5-user
 
 ## Kerberos Config
-COPY krb5.conf  krb5.conf
-RUN mv krb5.conf /etc/krb5.conf
+#COPY krb5.conf  krb5.conf
+#RUN mv krb5.conf /etc/krb5.conf
 
 ## Run Jupyterhub
 RUN conda install -c conda-forge -y oauthenticator
