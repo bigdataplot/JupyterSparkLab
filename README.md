@@ -7,6 +7,11 @@ Jupyterhub             |  Plot
 GitHub             |  DockerHub
 ![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/github.PNG)  |  ![](https://github.com/bigdataplot/JupyterSparkLab/blob/master/pic/screenshot/dockerhub.PNG)
 
+### Versions
+Version "**s**x.xx" uses host's local user profiles. (Check branch **ProfSync** on GitHub for more details)
+
+Version "x.xx" (without the leading **s**) or "latest" provides a super user account 'bigdataplot'
+
 
 ### To bring up your Jupyter-Spark-Lab environment, do the following steps:
 
